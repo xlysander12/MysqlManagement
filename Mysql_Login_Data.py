@@ -7,6 +7,8 @@ import pyautogui
 import tkinter as tk
 from tkinter import filedialog
 from xlsxwriter.workbook import Workbook
+import os.path
+from os import path
 
 # Create execution arguments
 parser = argparse.ArgumentParser(description="Mysql hacking data reader and writer")
@@ -16,16 +18,73 @@ parser.add_argument('-d', '--delete', help="Deletes entries in the database", ac
 parser.add_argument('-a', '--add', help="Adds data manually in database", action="store_true")
 parser.add_argument('-g', '--gui', help="Opens GUI", action="store_true")
 parser.add_argument('-e', '--export', help="Opens GUI", action="store_true")
+
+
 # Created --------------------------
+
+
+# Creating function to create mysql.cfg file
+def createmysqlconfig(host, user, password, database):
+    with open('mysql.cfg', 'w') as conf:
+        conf.write("Host: " + host + "\n")
+        conf.write("User: " + user + "\n")
+        conf.write("Password: " + password + "\n")
+        conf.write("Database: " + database)
+        conf.close()
+
+
+# Created -----------------------------------
+
+
+# Checking if there is a present "mysql.cfg"
+if not path.exists('mysql.cfg'):
+    print("There isn't any 'mysql.cfg' file in directory. Creating one to connect to mysql")
+    host = input("Host of DB: ")
+    user = input("User to log in: ")
+    password = input("Password to authenticate with " + user + ": ")
+    database = input("Database name to connect to: ")
+    createmysqlconfig(host, user, password, database)
+
+# Checked and created if didn't exist -------------------------
+
+# Initializing mysql variables
+dbHost = ""
+dbUser = ""
+dbPass = ""
+dbDB = ""
+
+# Creating MySQL connection variables
+with open('mysql.cfg') as f:
+    for line in f:
+        foundDbIP = line.find('Host:')
+        foundDbUser = line.find('User:')
+        foundDbPass = line.find('Password:')
+        foundDB = line.find('Database:')
+        if foundDbIP != -1:
+            dbHost = line.split(": ")
+        if foundDbUser != -1:
+            dbUser = line.split(": ")
+        if foundDB != -1:
+            dbDB = line.split(": ")
+        if foundDbPass != -1:
+            dbPass = line.split(": ")
+        elif foundDbPass == -1:
+            dbPass = ""
+# Created ---------------------------------
 
 
 # Connect to database
 try:
+    check = dbPass[1]
+    dbPass = check
+except IndexError:
+    dbPass = ""
+try:
     mydb = mysql.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="hacking_data"
+        host=dbHost[1],
+        user=dbUser[1],
+        password=dbPass,
+        database=dbDB[1]
     )
 except mysql.Error:
     sys.exit("Couldn't connect to the database")
@@ -35,7 +94,7 @@ mycursor = mydb.cursor()
 # Connected
 
 # Create main GUI instance
-main = tk.Tk()
+# main = tk.Tk()
 
 
 # Created --------------
@@ -135,15 +194,13 @@ def export(file, id="", website=""):
             vals = (id, website_like)
             mycursor.execute(sqlcommand, vals)
             result = mycursor.fetchall()
-            with open (file, 'w') as f:
+            with open(file, 'w') as f:
                 for r, row in enumerate(result):
                     for c, col in enumerate(row):
                         sheet.write(r, c, col)
                 workbook.close()
     else:
         sys.exit("No file specified")
-
-
 
 
 # Creating function to upload
@@ -214,7 +271,7 @@ def add(id, url, username, password):
 # Created ------------------------
 
 # Create function to open logindata GUI window
-def logindatagui():
+"""def logindatagui():
     main.destroy()
     logindata = tk.Tk()
     canvaslogindata = tk.Canvas(logindata, width=300, height=300)
@@ -228,7 +285,7 @@ def logindatagui():
     canvaslogindata.create_window(150, 150, window=retrievedataButton)
     canvaslogindata.create_window(150, 150, window=uploaddataButton)
     canvaslogindata.create_window(150, 150, window=deletedataButton)
-    logindata.mainloop()
+    logindata.mainloop()"""
 
 
 #  Checking for options and executing accordingly

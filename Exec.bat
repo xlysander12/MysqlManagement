@@ -30,7 +30,22 @@ if %login% == 3 goto login_data_delete
 
 :login_data_retrieve
 cls
+echo See data in terminal (1)
+echo Export data to excel file (2)
+set /p method=
+
+if %method% == 1 goto login_data_retrieve1
+if %method% == 2 goto login_data_retrieve2
+
+:login_data_retrieve1
+cls
 py Mysql_Login_Data.py -r
+pause
+exit
+
+:login_data_retrieve2
+cls
+py Mysql_Login_Data.py -e
 pause
 exit
 
